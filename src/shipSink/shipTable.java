@@ -63,7 +63,7 @@ public class shipTable {
 			// If nothing was found we return missed shot
 			return 2;
 		} else {
-			// We multiply result with 10 to distinquish other possible values
+			// We multiply result with 10 to distinquish other possible values (0-3)
 			sum = sum * 10;
 			return sum;
 		}

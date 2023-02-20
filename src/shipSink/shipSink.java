@@ -1,22 +1,13 @@
 //package shipSink;
 
 public class shipSink {
-
-	// The ships and their lengths which will be placed to the grid
-	static int shipsToPlace[] = { 5, 4, 3, 3, 2, 2, 1 };
-
-	// Difficulty setting 0,1,2,3
-	static int difficulty = 0;
-
-	// Minesweeper mode
-	static boolean shipSweeper = false;
-
-	// Creating shipTable objects for both player and AI
-	static shipTable playersShips = new shipTable();
-	static shipTable aiShips = new shipTable();
-
-	// Creating the gUI
-	static shipUi s = new shipUi();
+	static shipTable playersShips = new shipTable(); //Shiptable for player's ships
+	static shipTable aiShips = new shipTable(); //Shiptable for ai's ships
+	static int shipsToPlace[] = { 5, 4, 3, 3, 2, 2, 1 }; // Ships and their lengths
+	static int difficulty = 0; // Difficulty setting 0,1,2,3
+	static boolean shipSweeper = false; // Minesweeper setting
+	static shipUi s = new shipUi(); // Creating GUI
+	static highScores scores = new highScores();
 
 	// Variables for game status
 	static int playerScore;
@@ -29,13 +20,6 @@ public class shipSink {
 
 	public static void main(String[] args) {
 
-	}
-
-	// For saving changed settings
-	public static void saveSettings(int d, int[] s, boolean m) {
-		difficulty = d;
-		shipsToPlace = s;
-		shipSweeper = m;
 	}
 
 	public static void setupBeginnig() {
@@ -142,7 +126,7 @@ public class shipSink {
 		return s; //return shiptable 
 	}
 
-
+	// Refreshing buttons in ShipUi
 	public static void updatePlayersShips() {
 		for (int i=0; i<10; i++) {
 			for (int j=0; j<10; j++) {
@@ -152,6 +136,13 @@ public class shipSink {
 				}
 			}
 		}
+	}
+	
+	// For saving changed settings
+	public static void saveSettings(int d, int[] s, boolean m) {
+		difficulty = d;
+		shipsToPlace = s;
+		shipSweeper = m;
 	}
 
 	public static void playerShoots(int x, int y) {
@@ -176,8 +167,10 @@ public class shipSink {
 				z = 3;
 				playerScore += 100 + hitsInRow * 10;
 				hitsInRow++;
+				// TODO
+				// Add check if ship was sunk.
+				// Add a visual feedback into shipUi
 			}
-			// z=aiShips.getShip(x, y);
 			s.setAiButton(x, y, z);
 			if (!lastWasHit) {
 				turnNumber++;
@@ -185,8 +178,14 @@ public class shipSink {
 			}
 			s.setPlayerScore(playerScore);
 			if (aiShips.checkIfWin()) {
-				s.updateText("\nPlayer wins!");
-				s.gameOver("Player wins the game!", "Congratulations");
+				if(highScores.getLowestScore() < playerScore) {
+					s.updateText("\nNew high score!");
+					s.gameOver("Player wins the game!\n New high score!", "Outstanding");
+					s.newHighScore(playerScore);
+				}
+				else {
+					s.gameOver("Player wins the game!", "Congratulations");
+				}
 			}
 			if (lastWasHit) {
 				playerTurn = true;
@@ -247,7 +246,7 @@ public class shipSink {
 		} while (lastWasHit);
 		s.setAIScore(aiScore);
 		if (playersShips.checkIfWin()) {
-			s.updateText("\nG.A.M.E O.V.E.R! You lose, punk!");
+			s.updateText("\nGame over. Player lost all ships.");
 			s.gameOver("You lose!", "Totaled");
 		}
 		playerTurn = true;

@@ -1,5 +1,3 @@
-//package shipSink;
-
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -9,7 +7,7 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.ArrayList;
 import java.util.Collections;
-
+import java.util.regex.Pattern;
 import javax.swing.ButtonGroup;
 import javax.swing.JComboBox;
 import javax.swing.JOptionPane;
@@ -22,7 +20,7 @@ public class shipUi extends Frame {
 	private Button[][] aiShipButtons = new Button[10][10];
 	private Button[][] playerShipButtons = new Button[10][10];
 	private Button buttonStart = new Button("Start");
-	private Button buttonDifficulty = new Button("Difficulty");
+	private Button buttonOptions = new Button("Options");
 	private Button buttonScores = new Button("Scores");
 	private Button buttonQuit = new Button("Quit");
 	private int buttonWidth = 20;
@@ -62,14 +60,21 @@ public class shipUi extends Frame {
 	private Label labelCheats = new Label("Cheats");
 	JCheckBox chkShipSweeper = new JCheckBox("Minesweeper mode");
 
+	// ScoreBoard
+	private Panel scoreUI = new Panel();
+	private Label labelHighScores = new Label("High score");
+	private Label labelScoreNames[] = new Label[5];
+	private Label labelScoreScores[] = new Label[5];
+	private Button buttonScoreOK = new Button("OK");
+	private String returnView;
+
 	shipUi() {
 
 		// Basic settings for the window view
 		int UiHeight = 410;
 		int UiWidth = 600;
 		setSize(UiWidth, UiHeight);
-		// setLocation(100,100);
-		setLocationRelativeTo(null); //sets location to center of screen
+		setLocationRelativeTo(null); // sets location to center of screen
 		setLayout(null);
 		setTitle("Ship Sink");
 
@@ -88,12 +93,12 @@ public class shipUi extends Frame {
 		labelTitle.setBounds(180, 50, 400, 60);
 		labelTitle.setFont(new Font("Times Roman", Font.BOLD, 50));
 		buttonStart.setBounds(100, 140, 400, 40);
-		buttonDifficulty.setBounds(100, 190, 400, 40);
+		buttonOptions.setBounds(100, 190, 400, 40);
 		buttonScores.setBounds(100, 240, 400, 40);
 		buttonQuit.setBounds(100, 290, 400, 40);
 		menuUI.add(labelTitle);
 		menuUI.add(buttonStart);
-		menuUI.add(buttonDifficulty);
+		menuUI.add(buttonOptions);
 		menuUI.add(buttonScores);
 		menuUI.add(buttonQuit);
 		buttonStart.addActionListener(new ButtonListener());
@@ -138,6 +143,27 @@ public class shipUi extends Frame {
 		settingsUI.add(chkShipSweeper);
 		difficultyBtnOk.addActionListener(new ButtonListener());
 		add(settingsUI);
+
+		// ScoreUI
+		scoreUI.setBounds(0, 0, UiWidth, UiHeight);
+		scoreUI.setLayout(null);
+		scoreUI.setVisible(false);
+		labelHighScores.setBounds(170, 50, 400, 60);
+		labelHighScores.setFont(new Font("Times Roman", Font.BOLD, 50));
+		// Labels to display 5 high scores
+		for (int i = 0; i < 5; i++) {
+			labelScoreNames[i] = new Label("");
+			labelScoreNames[i].setBounds(220, i * 20 + 140, 140, 20);
+			labelScoreScores[i] = new Label("");
+			labelScoreScores[i].setBounds(360, i * 20 + 140, 100, 20);
+			scoreUI.add(labelScoreNames[i]);
+			scoreUI.add(labelScoreScores[i]);
+		}
+		buttonScoreOK.setBounds(200, 300, 200, 40);
+		scoreUI.add(labelHighScores);
+		scoreUI.add(buttonScoreOK);
+		buttonScoreOK.addActionListener(new ButtonListener());
+		add(scoreUI);
 
 		// GameUi
 		labelOpponent.setBounds(buttonWidth, 50, buttonWidth * 10, 20);
@@ -184,7 +210,8 @@ public class shipUi extends Frame {
 		buttonCancel.addActionListener(new ButtonListener());
 		buttonPlaceShips.addActionListener(new ButtonListener());
 		buttonExitGame.addActionListener(new ButtonListener());
-		buttonDifficulty.addActionListener(new ButtonListener());
+		buttonOptions.addActionListener(new ButtonListener());
+		buttonScores.addActionListener(new ButtonListener());
 
 		// Creating buttons for aiShips
 		for (int i = 0; i < 10; i++) {
@@ -208,16 +235,17 @@ public class shipUi extends Frame {
 				playerShipButtons[i][j].setEnabled(false);
 			}
 		}
-		setVisible(true); // Sets the frame visible	
+		setVisible(true); // Sets the frame visible that is the ShipUI class
 	}
 
-	public void setAiButton(int x, int y, int z) {
+	//Method for changing Ai button text.
 		// shipTable values:
 		// 0 = empty
 		// 1 = ship
 		// 2 = missed shot
 		// 3 = ship hit
 		// >9 = minesweeper mode is on and passed value is divided by 10 and shown as button label
+	public void setAiButton(int x, int y, int z) {
 		if (z == 3) {
 			aiShipButtons[x][y].setBackground(Color.GREEN);
 			aiShipButtons[x][y].setFont(new Font("Arial", Font.BOLD, 14));
@@ -342,7 +370,7 @@ public class shipUi extends Frame {
 			// Gets the source of which button is pressed
 			Object Source = e.getSource();
 
-			// Loops through button grid to figure out which was pressed
+			// Figure out which was pressed
 			for (int i = 0; i < 10; i++) {
 				for (int j = 0; j < 10; j++) {
 					if (Source.equals(aiShipButtons[i][j])) {
@@ -351,8 +379,6 @@ public class shipUi extends Frame {
 						// fetched from shipTable object
 						aiShipButtons[i][j].setEnabled(false);
 						shipSink.playerShoots(i, j);
-						// aiShipButtons[i][j].setLabel(Integer.toString(shipSink.aiShips.getShip(i,
-						// j)));
 						break;
 					}
 				}
@@ -378,6 +404,21 @@ public class shipUi extends Frame {
 				gameUI.setVisible(false);
 				menuUI.setVisible(true);
 			}
+
+			if (Source.equals(buttonScores)) {
+				showScores();
+			}
+
+			if (Source.equals(buttonScoreOK)) {
+				scoreUI.setVisible(false);
+				if (returnView == "gameUI") {
+					gameUI.setVisible(true);
+				}
+				if (returnView == "menuUI") {
+					menuUI.setVisible(true);
+				}
+			}
+
 			if (Source.equals(buttonExitGame)) {
 				int reply = JOptionPane.showConfirmDialog(null, "Are you sure you want to exit?", "Exit?",
 						JOptionPane.YES_NO_OPTION);
@@ -394,7 +435,7 @@ public class shipUi extends Frame {
 				textArea.setText("Game begins. Players turn.");
 				updateText("\n-----Turn 1-----");
 			}
-			if (Source.equals(buttonDifficulty)) {
+			if (Source.equals(buttonOptions)) {
 				menuUI.setVisible(false);
 				settingsUI.setVisible(true);
 			}
@@ -408,36 +449,73 @@ public class shipUi extends Frame {
 
 	// Mouselistener to add some colors in button grid
 	private class ML implements MouseListener {
-		//hovering the button grid paints buttons black
+		// hovering the button grid paints buttons black
 		public void mouseEntered(MouseEvent me) {
 			Button button = (Button) me.getSource();
 			button.setBackground(Color.BLACK);
 		}
 
-		@Override
-		public void mouseClicked(MouseEvent me) {
-			// TODO Auto-generated method stub
-
-		}
-
-		
 		public void mousePressed(MouseEvent me) {
 			Button button = (Button) me.getSource();
 			button.setBackground(Color.RED);
 		}
 
-		@Override
 		public void mouseReleased(MouseEvent me) {
 			Button button = (Button) me.getSource();
 			button.setBackground(Color.WHITE);
 		}
 
-		@Override
 		public void mouseExited(MouseEvent me) {
 			Button button = (Button) me.getSource();
 			Color testi = button.getBackground();
 			if (testi != Color.GREEN)
 				button.setBackground(null);
 		}
+
+		public void mouseClicked(MouseEvent e) {
+			// required by MouseListener
+		}
+	}
+
+	public void showScores() {
+		int i = 0;
+		ArrayList<highScore> scores = new ArrayList<highScore>(highScores.getAllScores());
+		for (highScore h : scores) {
+			labelScoreNames[i].setText(h.getName());
+			labelScoreScores[i].setText(Integer.toString(h.getScore()));
+			i++;
+		}
+
+		if (menuUI.isVisible()) {
+			menuUI.setVisible(false);
+			returnView = "menuUI";
+		}
+		if (gameUI.isVisible()) {
+			gameUI.setVisible(false);
+			returnView = "gameUI";
+		}
+		scoreUI.setVisible(true);
+	}
+
+	public void newHighScore(int i) {
+		String userInput = null;
+		while (userInput == null || userInput.trim().isEmpty()) {
+			userInput = JOptionPane.showInputDialog(null, "Enter your name:");
+			userInput = removeIllegalCharacters(userInput);
+		}
+		if (userInput.length() > 20) {
+			userInput = userInput.substring(0, 20);
+		}
+		highScore h = new highScore(userInput, i);
+		highScores.addHighScore(h);
+		showScores();
+	}
+
+	public String removeIllegalCharacters(String input) {
+				// Defining regular expression to match the illegal characters
+				String regex = "[\"'<>&\\\\;:]";
+				// We use regular expression to remove illegal characters
+				input = Pattern.compile(regex).matcher(input).replaceAll("");
+				return input;
 	}
 }

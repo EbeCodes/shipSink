@@ -1,9 +1,8 @@
 Simple ship sinking game to play against computer.
 This project was started years ago for fun and to maintain Java coding skills.
-Now releasing the project with several added features.
 
 //TODO
-Make scoreboard working
+Add ship sunk detection
 
 (Below was written by ChatGPT)
 
